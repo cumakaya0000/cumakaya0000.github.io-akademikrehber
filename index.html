@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fakülte Rehberi - Dinamik</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    
+    <style>
+        /* Modern University Faculty Directory Styles */
+
+        /* Reset and Base Styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          background: linear-gradient(135deg, #1befef 0%, #5ea24b 100%);
+          min-height: 100vh;
+          transition: all 0.3s ease;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, #5d0ada 0%, #b209f0 100%);
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+          transition: opacity 0.5s ease-out;
+        }
+
+        .loading-screen.fade-out {
+          opacity: 0;
+          pointer-events: none;
+        }
+
+        .spinner {
+          width: 60px;
+          height: 60px;
+          border: 4px solid rgba(255, 255, 255, 0.3);
+          border-top: 4px solid white;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        .loading-text {
+          color: white;
+          font-size: 1.2rem;
+          font-weight: 500;
+        }
+
+        /* Navigation */
+        .navbar {
+          backdrop-filter: blur(10px);
+          background: rgba(255, 255, 255, 0.95) !important;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+          font-weight: 700;
+          font-size: 1.5rem;
+        }
+
+        /* Hero Section */
+        .hero-gradient {
+          background: linear-gradient(135deg, #5d0ada 0%, #af2708 100%);
+          color: white;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero-gradient::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+          opacity: 0.3;
+        }
+
+        .hero-content {
+          position: relative;
+          z-index: 2;
+        }
+
+        .hero-icon {
+          font-size: 4rem;
+          margin-bottom: 1rem;
+          opacity: 0.9;
+        }
+
+        .hero-title {
+          font-size: 3.5rem;
+          font-weight: 800;
+          margin-bottom: 1rem;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+          font-size: 1.3rem;
+          opacity: 0.9;
+          margin-bottom: 2rem;
+        }
+
+        .hero-stats {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 2rem;
+          flex-wrap: wrap;
+        }
+
+        .stat-item {
+          text-align: center;
+        }
+
+        .stat-number {
+          font-size: 2.5rem;
+          font-weight: 800;
+          display: block;
+          line-height: 1;
+        }
+
+        .stat-label {
+          font-size: 0.9rem;
+          opacity: 0.8;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-top: 0.5rem;
+        }
+
+        .stat-divider {
+          width: 1px;
+          height: 40px;
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Main Content */
+        .main-wrapper {
+          background: #f8f9fa;
+          min-height: 100vh;
+        }
+
+        /* Search and Filter Section */
+        .search-filter-section {
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          border-radius: 15px;
+          padding: 2rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Visited Professors */
+        .visited-professors {
+          background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+          border-radius: 15px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Faculty Cards */
+        .modern-accordion .accordion-item {
+          border: none;
+          margin-bottom: 1rem;
+          border-radius: 15px;
+          overflow: hidden;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+          transition: all 0.3s ease;
+        }
+
+        .modern-accordion .accordion-item:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .modern-accordion-btn {
+          background: white;
+          border: none;
+          padding: 1.5rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          width: 100%;
+          text-align: left;
+          transition: all 0.3s ease;
+        }
+
+        .modern-accordion-btn:not(.collapsed) {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .faculty-icon {
+          width: 60px;
+          height: 60px;
+          border-radius: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 1rem;
+          font-size: 1.5rem;
+          color: white;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .faculty-info {
+          flex: 1;
+        }
+
+        .faculty-name {
+          font-size: 1.2rem;
+          font-weight: 600;
+          display: block;
+          margin-bottom: 0.25rem;
+        }
+
+        .faculty-count {
+          opacity: 0.7;
+          font-size: 0.9rem;
+        }
+
+        .expand-indicator {
+          font-size: 1.2rem;
+          transition: transform 0.3s ease;
+        }
+
+        .modern-accordion-btn:not(.collapsed) .expand-indicator {
+          transform: rotate(180deg);
+        }
+
+        /* Tables */
+        .modern-table {
+          background: white;
+          border-radius: 0;
+          overflow: hidden;
+        }
+
+        .modern-table thead th {
+          background: #f8f9fa;
+          border: none;
+          padding: 1rem;
+          font-weight: 600;
+          color: #495057;
+          text-transform: uppercase;
+          font-size: 0.85rem;
+          letter-spacing: 0.5px;
+        }
+
+        .academic-row {
+          transition: all 0.3s ease;
+          border: none;
+        }
+
+        .academic-row:hover {
+          background: #f8f9fa;
+          transform: scale(1.01);
+        }
+
+        .academic-row td {
+          padding: 1rem;
+          border: none;
+          vertical-align: middle;
+        }
+
+        .academic-profile {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .profile-img {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid #e9ecef;
+        }
+
+        .profile-name {
+          font-weight: 600;
+          margin: 0;
+          color: #2c3e50;
+        }
+
+        .profile-role {
+          color: #6c757d;
+          font-size: 0.85rem;
+        }
+
+        .modern-badge {
+          padding: 0.5rem 1rem;
+          border-radius: 25px;
+          font-weight: 500;
+          font-size: 0.8rem;
+        }
+
+        .department-text {
+          font-weight: 500;
+          color: #495057;
+        }
+
+        .room-badge {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 0.4rem 0.8rem;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .room-badge:hover {
+          transform: scale(1.05);
+          box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .contact-links {
+          display: flex;
+          gap: 0.5rem;
+        }
+
+        .contact-link {
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8f9fa;
+          color: #495057;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          border: none;
+          cursor: pointer;
+        }
+
+        .contact-link:hover {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          transform: scale(1.1);
+        }
+
+        /* Mobile Cards */
+        .mobile-view {
+          display: none;
+        }
+
+        .mobile-academic-card {
+          background: white;
+          border-radius: 15px;
+          padding: 1.5rem;
+          margin-bottom: 1rem;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+          border: 1px solid #e9ecef;
+          transition: all 0.3s ease;
+        }
+
+        .mobile-academic-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .mobile-card-header {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid #e9ecef;
+        }
+
+        .mobile-profile-img {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid #e9ecef;
+        }
+
+        .mobile-name {
+          font-weight: 600;
+          margin: 0 0 0.5rem 0;
+          color: #2c3e50;
+        }
+
+        .mobile-role {
+          color: #6c757d;
+          font-size: 0.9rem;
+          margin: 0;
+        }
+
+        .mobile-info-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.75rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          font-size: 0.9rem;
+        }
+
+        .info-item i {
+          width: 20px;
+          color: #667eea;
+        }
+
+        .mobile-contact-actions {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+          gap: 0.5rem;
+        }
+
+        .contact-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 0.25rem;
+          padding: 0.75rem 0.5rem;
+          border-radius: 10px;
+          text-decoration: none;
+          font-size: 0.8rem;
+          font-weight: 500;
+          transition: all 0.3s ease;
+          border: none;
+          cursor: pointer;
+        }
+
+        .contact-btn.phone {
+          background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+          color: white;
+        }
+
+        .contact-btn.email {
+          background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+          color: white;
+        }
+
+        .contact-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Floor Map */
+        .floor-map {
+          background: #f8f9fa;
+          border-radius: 15px;
+          padding: 1.5rem;
+          margin: 1rem 0;
+        }
+
+        .room-highlight {
+          fill: #007bff !important;
+          stroke: #0056b3 !important;
+          stroke-width: 3 !important;
+        }
+
+        /* User Info */
+        .user-info {
+          background: rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+          border-radius: 25px;
+          padding: 0.5rem 1rem;
+          color: white;
+          font-size: 0.9rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        /* Footer */
+        .modern-footer {
+          background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+          color: white;
+          margin-top: 3rem;
+        }
+
+        .footer-logo {
+          font-size: 2rem;
+          opacity: 0.8;
+        }
+
+        .footer-title {
+          font-weight: 600;
+          margin-bottom: 0.5rem;
+        }
+
+        .footer-text {
+          opacity: 0.8;
+          margin-bottom: 0.5rem;
+        }
+
+        .footer-year {
+          opacity: 0.6;
+          font-size: 0.9rem;
+        }
+
+        /* Dark Mode */
+        .dark-mode {
+          background: #1a1a1a !important;
+          color: #ffffff !important;
+        }
+
+        .dark-mode .hero-gradient {
+          background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%) !important;
+        }
+
+        .dark-mode .main-wrapper {
+          background: #1a1a1a !important;
+        }
+
+        .dark-mode .search-filter-section {
+          background: rgba(45, 55, 72, 0.95) !important;
+          color: white;
+        }
+
+        .dark-mode .modern-accordion .accordion-item {
+          background: #2d3748 !important;
+        }
+
+        .dark-mode .modern-accordion-btn {
+          background: #2d3748 !important;
+          color: white !important;
+        }
+
+        .dark-mode .modern-table {
+          background: #2d3748 !important;
+          color: white;
+        }
+
+        .dark-mode .modern-table thead th {
+          background: #4a5568 !important;
+          color: #ffffff !important;
+        }
+
+        .dark-mode .academic-row {
+          color: #ffffff !important;
+        }
+
+        .dark-mode .academic-row:hover {
+          background: #4a5568 !important;
+        }
+
+        .dark-mode .mobile-academic-card {
+          background: #2d3748 !important;
+          color: white;
+          border-color: #4a5568 !important;
+        }
+
+        .dark-mode .visited-professors {
+          background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%) !important;
+          color: white;
+        }
+
+        .dark-mode .floor-map {
+          background: #2d3748 !important;
+        }
+
+        .dark-mode .navbar {
+          background: rgba(45, 55, 72, 0.95) !important;
+          color: white;
+        }
+
+        .dark-mode .navbar-brand {
+          color: white !important;
+        }
+
+        /* Animations */
+        .fade-in {
+          animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .slide-in {
+          animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+          .hero-title {
+            font-size: 2.5rem;
+          }
+
+          .hero-stats {
+            gap: 1rem;
+          }
+
+          .stat-number {
+            font-size: 2rem;
+          }
+
+          .desktop-view {
+            display: none;
+          }
+
+          .mobile-view {
+            display: block;
+          }
+
+          .search-filter-section {
+            padding: 1rem;
+          }
+
+          .faculty-name {
+            font-size: 1rem;
+          }
+
+          .faculty-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .hero-title {
+            font-size: 2rem;
+          }
+
+          .hero-stats {
+            flex-direction: column;
+            gap: 1rem;
+          }
+
+          .stat-divider {
+            width: 40px;
+            height: 1px;
+          }
+
+          .mobile-contact-actions {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text">Akademik Rehber Yükleniyor...</div>
+        <div class="mt-2" style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">Lütfen bekleyiniz</div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <i class="bi bi-mortarboard-fill text-primary me-2" style="font-size: 1.5rem;"></i>
+                <span class="fw-bold">Akademik Rehber</span>
+            </a>
+            
+            <div class="d-flex align-items-center">
+                <!-- Dark Mode Toggle -->
+                <button id="darkModeToggle" class="btn btn-outline-secondary me-3">
+                    <i class="bi bi-moon-fill"></i>
+                </button>
+                
+                <!-- User Info / Login -->
+                <div id="userSection">
+                    <button id="loginBtn" class="btn btn-primary">
+                        <i class="bi bi-person-fill me-1"></i>
+                        Giriş Yap
+                    </button>
+                    <div id="userInfo" class="user-info d-none">
+                        <span id="userName"></span>
+                        <button id="logoutBtn" class="btn btn-sm btn-outline-light ms-2">Çıkış</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-gradient">
+        <div class="container">
+            <div class="hero-content text-center py-5">
+                <div class="hero-icon mb-4">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h1 class="hero-title mb-3">Akademik Rehber</h1>
+                <p class="hero-subtitle mb-4">Üniversitemiz Akademik Yapısı</p>
+                <div class="hero-stats d-flex justify-content-center gap-4">
+                    <div class="stat-item">
+                        <div class="stat-number" id="facultyCount">0</div>
+                        <div class="stat-label">Fakülte</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="departmentCount">0</div>
+                        <div class="stat-label">Bölüm</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="academicCount"></div>
+                        <div class="stat-label">Akademisyen</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="instituteCount">0</div>
+                        <div class="stat-label">Enstitü</div>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="schoolCount">0</div>
+                        <div class="stat-label">Yüksekokul</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <div class="container py-5">
+            <!-- Search and Filter Section -->
+            <div class="search-filter-section">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label for="searchInput" class="form-label">
+                            <i class="bi bi-search me-1"></i>
+                            Akademisyen Ara
+                        </label>
+                        <input type="text" class="form-control" id="searchInput" placeholder="İsim, bölüm veya unvan...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="unitTypeFilter" class="form-label">
+                            <i class="bi bi-building me-1"></i>
+                            Birim Türü
+                        </label>
+                        <select class="form-select" id="unitTypeFilter">
+                            <option value="">Tüm Birimler</option>
+                            <option value="faculty">Fakülteler</option>
+                            <option value="institute">Enstitüler</option>
+                            <option value="school">Yüksekokullar</option>
+                            <option value="vocational">Meslek Yüksekokulları</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="facultyFilter" class="form-label">
+                            <i class="bi bi-funnel me-1"></i>
+                            Birim Filtresi
+                        </label>
+                        <select class="form-select" id="facultyFilter">
+                            <option value="">Tüm Birimler</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="sortBy" class="form-label">
+                            <i class="bi bi-sort-alpha-down me-1"></i>
+                            Sıralama
+                        </label>
+                        <select class="form-select" id="sortBy">
+                            <option value="name">İsme Göre</option>
+                            <option value="title">Unvana Göre</option>
+                            <option value="department">Bölüme Göre</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary flex-fill" id="floorMapBtn">
+                                <i class="bi bi-map me-1"></i>
+                                Kat Planı
+                            </button>
+                            <button class="btn btn-info flex-fill" id="statisticsBtn">
+                                <i class="bi bi-graph-up me-1"></i>
+                                İstatistikler
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visited Professors Section -->
+            <div id="visitedSection" class="visited-professors d-none">
+                <h5 class="mb-3">
+                    <i class="bi bi-heart-fill text-danger me-2"></i>
+                    Ziyaret Ettiğim Akademisyenler
+                </h5>
+                <div id="visitedList" class="d-flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Results Info -->
+            <div class="mb-4">
+                <p class="text-muted mb-0" id="resultsInfo">Akademisyenler yükleniyor...</p>
+            </div>
+
+            <!-- Faculty Accordion -->
+            <div class="accordion modern-accordion" id="facultyAccordion">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="modern-footer">
+        <div class="container">
+            <div class="footer-content text-center py-4">
+                <div class="footer-logo mb-3">
+                    <i class="bi bi-mortarboard-fill"></i>
+                </div>
+                <h6 class="footer-title">Üniversite Akademik Rehberi</h6>
+                <p class="footer-text">Akademik bilgiler güncel tutulmaktadır.</p>
+                <div class="footer-year">© 2024</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Message Modal -->
+    <div class="modal fade" id="messageModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered message-modal">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-envelope me-2"></i>
+                        Mesaj Gönder
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong id="recipientName"></strong> adlı akademisyene mesaj gönderiyorsunuz.
+                    </div>
+                    <form id="messageForm">
+                        <div class="mb-3">
+                            <label for="senderName" class="form-label">Adınız *</label>
+                            <input type="text" class="form-control" id="senderName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="senderEmail" class="form-label">E-posta Adresiniz *</label>
+                            <input type="email" class="form-control" id="senderEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="messageSubject" class="form-label">Konu *</label>
+                            <input type="text" class="form-control" id="messageSubject" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="messageContent" class="form-label">Mesaj *</label>
+                            <textarea class="form-control" id="messageContent" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="sendMessageBtn">
+                        <i class="bi bi-send me-1"></i>
+                        Gönder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floor Map Modal -->
+    <div class="modal fade" id="floorMapModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-map me-2"></i>
+                        Kampüs Kat Planı
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="floor-map">
+                        <div class="mb-3">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary active" data-floor="1">1. Kat</button>
+                                <button type="button" class="btn btn-outline-primary" data-floor="2">2. Kat</button>
+                                <button type="button" class="btn btn-outline-primary" data-floor="3">3. Kat</button>
+                            </div>
+                        </div>
+                        <div id="floorPlan">
+                            <!-- SVG Floor Plan will be inserted here -->
+                        </div>
+                        <div id="roomInfo" class="mt-3 p-3 bg-info bg-opacity-10 rounded d-none">
+                            <h6 class="text-info">Seçili Oda Bilgisi</h6>
+                            <p class="mb-0" id="roomDetails"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div class="modal fade" id="statisticsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Üniversite İstatistikleri
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="bi bi-building me-2"></i>Birim Dağılımı</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="unitStats"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-people me-2"></i>Akademisyen Dağılımı</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="academicStats"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-award me-2"></i>Unvan Dağılımı</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div id="titleStats"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-fill me-2"></i>
+                        Kullanıcı Girişi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="usernameInput" class="form-label">Kullanıcı Adı</label>
+                            <input type="text" class="form-control" id="usernameInput" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="passwordInput" class="form-label">Şifre (Demo için herhangi bir şey yazın)</label>
+                            <input type="password" class="form-control" id="passwordInput" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="button" class="btn btn-primary" id="loginSubmitBtn">Giriş Yap</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Extended Faculty Data with all requested units
+        const facultyData = {
+          faculties: [
+            {
+              id: "humanities",
+              name: "İnsani Bilimler ve Edebiyat Fakültesi",
+              icon: "bi-book-fill",
+              color: "literature",
+              type: "faculty",
+              departments: [
+                {
+                  id: "turkish-lit",
+                  name: "Türk Dili ve Edebiyatı",
+                  academics: [
+                    {
+                      id: 1,
+                      name: "Ahmet Yılmaz",
+                      title: "Prof. Dr.",
+                      role: "Fakülte Dekanı",
+                      department: "Türk Dili ve Edebiyatı",
+                      room: "101-A",
+                      floor: 1,
+                      phone: "+902125550101",
+                      email: "a.yilmaz@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Klasik Türk Edebiyatı",
+                      officeHours: "Pazartesi-Çarşamba 14:00-16:00",
+                    },
+                  ],
+                },
+                {
+                  id: "english-lit",
+                  name: "İngiliz Dili ve Edebiyatı",
+                  academics: [
+                    {
+                      id: 2,
+                      name: "Burcu Aksoy",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "İngiliz Dili ve Edebiyatı",
+                      room: "102-B",
+                      floor: 1,
+                      phone: "+902125550102",
+                      email: "b.aksoy@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Modern İngiliz Edebiyatı",
+                      officeHours: "Salı-Perşembe 10:00-12:00",
+                    },
+                  ],
+                },
+                {
+                  id: "history",
+                  name: "Tarih",
+                  academics: [
+                    {
+                      id: 3,
+                      name: "Mehmet Kaya",
+                      title: "Dr. Öğr. Üyesi",
+                      role: "Araştırma Görevlisi",
+                      department: "Tarih",
+                      room: "103-C",
+                      floor: 1,
+                      phone: "+902125550103",
+                      email: "m.kaya@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Osmanlı Tarihi",
+                      officeHours: "Çarşamba-Cuma 13:00-15:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "arts",
+              name: "Güzel Sanatlar Fakültesi",
+              icon: "bi-palette-fill",
+              color: "arts",
+              type: "faculty",
+              departments: [
+                {
+                  id: "painting",
+                  name: "Resim",
+                  academics: [
+                    {
+                      id: 4,
+                      name: "Kemal Arslan",
+                      title: "Prof. Dr.",
+                      role: "Sanat Yönetmeni",
+                      department: "Resim",
+                      room: "204-A",
+                      floor: 2,
+                      phone: "+902125550204",
+                      email: "k.arslan@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Yağlıboya Tekniği",
+                      officeHours: "Pazartesi-Çarşamba 15:00-17:00",
+                    },
+                  ],
+                },
+                {
+                  id: "music",
+                  name: "Müzik",
+                  academics: [
+                    {
+                      id: 5,
+                      name: "Selin Yıldız",
+                      title: "Doç. Dr.",
+                      role: "Müzik Direktörü",
+                      department: "Müzik",
+                      room: "205-B",
+                      floor: 2,
+                      phone: "+902125550205",
+                      email: "s.yildiz@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Klasik Müzik",
+                      officeHours: "Salı-Perşembe 11:00-13:00",
+                    },
+                  ],
+                },
+                {
+                  id: "sculpture",
+                  name: "Heykel",
+                  academics: [
+                    {
+                      id: 6,
+                      name: "Emre Güven",
+                      title: "Dr. Öğr. Üyesi",
+                      role: "Atölye Sorumlusu",
+                      department: "Heykel",
+                      room: "206-C",
+                      floor: 2,
+                      phone: "+902125550206",
+                      email: "e.guven@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Modern Heykel",
+                      officeHours: "Çarşamba-Cuma 14:00-16:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "business",
+              name: "İktisadi ve İdari Bilimler Fakültesi",
+              icon: "bi-briefcase-fill",
+              color: "business",
+              type: "faculty",
+              departments: [
+                {
+                  id: "economics",
+                  name: "İktisat",
+                  academics: [
+                    {
+                      id: 7,
+                      name: "Hasan Öztürk",
+                      title: "Prof. Dr.",
+                      role: "Fakülte Dekanı",
+                      department: "İktisat",
+                      room: "301-A",
+                      floor: 3,
+                      phone: "+902125550301",
+                      email: "h.ozturk@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Makro Ekonomi",
+                      officeHours: "Pazartesi-Çarşamba 16:00-18:00",
+                    },
+                  ],
+                },
+                {
+                  id: "management",
+                  name: "İşletme",
+                  academics: [
+                    {
+                      id: 8,
+                      name: "Fatma Erdoğan",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "İşletme",
+                      room: "302-B",
+                      floor: 3,
+                      phone: "+902125550302",
+                      email: "f.erdogan@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "İnsan Kaynakları",
+                      officeHours: "Salı-Perşembe 09:00-11:00",
+                    },
+                  ],
+                },
+                {
+                  id: "public-admin",
+                  name: "Kamu Yönetimi",
+                  academics: [
+                    {
+                      id: 9,
+                      name: "Ali Kılıç",
+                      title: "Dr. Öğr. Üyesi",
+                      role: "Araştırma Görevlisi",
+                      department: "Kamu Yönetimi",
+                      room: "303-C",
+                      floor: 3,
+                      phone: "+902125550303",
+                      email: "a.kilic@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Yerel Yönetimler",
+                      officeHours: "Çarşamba-Cuma 15:00-17:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "theology",
+              name: "İlahiyat Fakültesi",
+              icon: "bi-book-half",
+              color: "theology",
+              type: "faculty",
+              departments: [
+                {
+                  id: "basic-islamic",
+                  name: "Temel İslam Bilimleri",
+                  academics: [
+                    {
+                      id: 13,
+                      name: "Mustafa Özdemir",
+                      title: "Prof. Dr.",
+                      role: "Fakülte Dekanı",
+                      department: "Temel İslam Bilimleri",
+                      room: "401-A",
+                      floor: 4,
+                      phone: "+902125550401",
+                      email: "m.ozdemir@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Hadis İlmi",
+                      officeHours: "Pazartesi-Çarşamba 14:00-16:00",
+                    },
+                  ],
+                },
+                {
+                  id: "islamic-history",
+                  name: "İslam Tarihi ve Sanatları",
+                  academics: [
+                    {
+                      id: 14,
+                      name: "Ayşe Kara",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "İslam Tarihi ve Sanatları",
+                      room: "402-B",
+                      floor: 4,
+                      phone: "+902125550402",
+                      email: "a.kara@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "İslam Sanatları",
+                      officeHours: "Salı-Perşembe 10:00-12:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "engineering",
+              name: "Mühendislik Fakültesi",
+              icon: "bi-gear-fill",
+              color: "engineering",
+              type: "faculty",
+              departments: [
+                {
+                  id: "computer",
+                  name: "Bilgisayar Mühendisliği",
+                  academics: [
+                    {
+                      id: 10,
+                      name: "Cem Demir",
+                      title: "Dr.",
+                      role: "Yazılım Uzmanı",
+                      department: "Bilgisayar Mühendisliği",
+                      room: "104-A",
+                      floor: 1,
+                      phone: "+902125550104",
+                      email: "c.demir@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Yapay Zeka",
+                      officeHours: "Pazartesi-Çarşamba 13:00-15:00",
+                    },
+                  ],
+                },
+                {
+                  id: "electrical",
+                  name: "Elektrik-Elektronik Mühendisliği",
+                  academics: [
+                    {
+                      id: 11,
+                      name: "Elif Özkan",
+                      title: "Prof. Dr.",
+                      role: "Dekan Yardımcısı",
+                      department: "Elektrik-Elektronik Müh.",
+                      room: "105-B",
+                      floor: 1,
+                      phone: "+902125550105",
+                      email: "e.ozkan@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Güç Sistemleri",
+                      officeHours: "Salı-Perşembe 14:00-16:00",
+                    },
+                  ],
+                },
+                {
+                  id: "mechanical",
+                  name: "Makine Mühendisliği",
+                  academics: [
+                    {
+                      id: 12,
+                      name: "Okan Şahin",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "Makine Mühendisliği",
+                      room: "106-C",
+                      floor: 1,
+                      phone: "+902125550106",
+                      email: "o.sahin@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Termodinamik",
+                      officeHours: "Çarşamba-Cuma 10:00-12:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "health-sciences",
+              name: "Sağlık Bilimleri Fakültesi",
+              icon: "bi-heart-pulse-fill",
+              color: "health",
+              type: "faculty",
+              departments: [
+                {
+                  id: "nursing",
+                  name: "Hemşirelik",
+                  academics: [
+                    {
+                      id: 15,
+                      name: "Zeynep Yılmaz",
+                      title: "Prof. Dr.",
+                      role: "Fakülte Dekanı",
+                      department: "Hemşirelik",
+                      room: "501-A",
+                      floor: 5,
+                      phone: "+902125550501",
+                      email: "z.yilmaz@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Halk Sağlığı Hemşireliği",
+                      officeHours: "Pazartesi-Çarşamba 09:00-11:00",
+                    },
+                  ],
+                },
+                {
+                  id: "nutrition",
+                  name: "Beslenme ve Diyetetik",
+                  academics: [
+                    {
+                      id: 16,
+                      name: "Murat Koç",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "Beslenme ve Diyetetik",
+                      room: "502-B",
+                      floor: 5,
+                      phone: "+902125550502",
+                      email: "m.koc@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Klinik Beslenme",
+                      officeHours: "Salı-Perşembe 13:00-15:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "sports-sciences",
+              name: "Spor Bilimleri Fakültesi",
+              icon: "bi-trophy-fill",
+              color: "sports",
+              type: "faculty",
+              departments: [
+                {
+                  id: "sports-management",
+                  name: "Spor Yöneticiliği",
+                  academics: [
+                    {
+                      id: 17,
+                      name: "Serkan Aktaş",
+                      title: "Prof. Dr.",
+                      role: "Fakülte Dekanı",
+                      department: "Spor Yöneticiliği",
+                      room: "601-A",
+                      floor: 6,
+                      phone: "+902125550601",
+                      email: "s.aktas@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Spor Pazarlaması",
+                      officeHours: "Pazartesi-Çarşamba 14:00-16:00",
+                    },
+                  ],
+                },
+                {
+                  id: "coaching",
+                  name: "Antrenörlük Eğitimi",
+                  academics: [
+                    {
+                      id: 18,
+                      name: "Gülşen Aydın",
+                      title: "Doç. Dr.",
+                      role: "Bölüm Başkanı",
+                      department: "Antrenörlük Eğitimi",
+                      room: "602-B",
+                      floor: 6,
+                      phone: "+902125550602",
+                      email: "g.aydin@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Futbol Antrenörlüğü",
+                      officeHours: "Salı-Perşembe 10:00-12:00",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          institutes: [
+            {
+              id: "graduate-institute",
+              name: "Lisansüstü Eğitim Enstitüsü",
+              icon: "bi-mortarboard",
+              color: "institute",
+              type: "institute",
+              departments: [
+                {
+                  id: "graduate-programs",
+                  name: "Lisansüstü Programlar",
+                  academics: [
+                    {
+                      id: 19,
+                      name: "Ahmet Çelik",
+                      title: "Prof. Dr.",
+                      role: "Enstitü Müdürü",
+                      department: "Lisansüstü Eğitim Enstitüsü",
+                      room: "701-A",
+                      floor: 7,
+                      phone: "+902125550701",
+                      email: "a.celik@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Eğitim Yönetimi",
+                      officeHours: "Pazartesi-Çarşamba 15:00-17:00",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          schools: [
+            {
+              id: "physical-education",
+              name: "Beden Eğitimi ve Spor Yüksekokulu",
+              icon: "bi-person-arms-up",
+              color: "school",
+              type: "school",
+              departments: [
+                {
+                  id: "physical-education-dept",
+                  name: "Beden Eğitimi ve Spor Öğretmenliği",
+                  academics: [
+                    {
+                      id: 20,
+                      name: "Mehmet Spor",
+                      title: "Doç. Dr.",
+                      role: "Yüksekokul Müdürü",
+                      department: "Beden Eğitimi ve Spor Öğretmenliği",
+                      room: "801-A",
+                      floor: 8,
+                      phone: "+902125550801",
+                      email: "m.spor@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Spor Pedagojisi",
+                      officeHours: "Pazartesi-Çarşamba 09:00-11:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "tourism-hospitality",
+              name: "Turizm İşletmeciliği ve Otelcilik Yüksekokulu",
+              icon: "bi-building",
+              color: "tourism",
+              type: "school",
+              departments: [
+                {
+                  id: "tourism-management",
+                  name: "Turizm İşletmeciliği",
+                  academics: [
+                    {
+                      id: 21,
+                      name: "Ayşe Turizm",
+                      title: "Dr. Öğr. Üyesi",
+                      role: "Yüksekokul Müdürü",
+                      department: "Turizm İşletmeciliği",
+                      room: "802-A",
+                      floor: 8,
+                      phone: "+902125550802",
+                      email: "a.turizm@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Turizm Pazarlaması",
+                      officeHours: "Salı-Perşembe 14:00-16:00",
+                    },
+                  ],
+                },
+                {
+                  id: "hotel-management",
+                  name: "Otel İşletmeciliği",
+                  academics: [
+                    {
+                      id: 22,
+                      name: "Can Otel",
+                      title: "Dr. Öğr. Üyesi",
+                      role: "Bölüm Başkanı",
+                      department: "Otel İşletmeciliği",
+                      room: "803-B",
+                      floor: 8,
+                      phone: "+902125550803",
+                      email: "c.otel@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Otel Yönetimi",
+                      officeHours: "Çarşamba-Cuma 10:00-12:00",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          vocationalSchools: [
+            {
+              id: "health-services-myo",
+              name: "Sağlık Hizmetleri MYO",
+              icon: "bi-hospital",
+              color: "vocational",
+              type: "vocational",
+              departments: [
+                {
+                  id: "medical-secretary",
+                  name: "Tıbbi Sekreterlik",
+                  academics: [
+                    {
+                      id: 23,
+                      name: "Fatma Sağlık",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Tıbbi Sekreterlik",
+                      room: "901-A",
+                      floor: 9,
+                      phone: "+902125550901",
+                      email: "f.saglik@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Sağlık Yönetimi",
+                      officeHours: "Pazartesi-Çarşamba 13:00-15:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "social-sciences-myo",
+              name: "Sosyal Bilimler MYO",
+              icon: "bi-people-fill",
+              color: "social",
+              type: "vocational",
+              departments: [
+                {
+                  id: "child-development",
+                  name: "Çocuk Gelişimi",
+                  academics: [
+                    {
+                      id: 24,
+                      name: "Elif Çocuk",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Çocuk Gelişimi",
+                      room: "902-A",
+                      floor: 9,
+                      phone: "+902125550902",
+                      email: "e.cocuk@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Erken Çocukluk Eğitimi",
+                      officeHours: "Salı-Perşembe 09:00-11:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "technical-sciences-myo",
+              name: "Teknik Bilimler MYO",
+              icon: "bi-tools",
+              color: "technical",
+              type: "vocational",
+              departments: [
+                {
+                  id: "computer-programming",
+                  name: "Bilgisayar Programcılığı",
+                  academics: [
+                    {
+                      id: 25,
+                      name: "Murat Teknik",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Bilgisayar Programcılığı",
+                      room: "903-A",
+                      floor: 9,
+                      phone: "+902125550903",
+                      email: "m.teknik@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Web Programlama",
+                      officeHours: "Çarşamba-Cuma 14:00-16:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "cildir-myo",
+              name: "Çıldır MYO",
+              icon: "bi-geo-alt-fill",
+              color: "regional",
+              type: "vocational",
+              departments: [
+                {
+                  id: "agriculture",
+                  name: "Tarım ve Hayvancılık",
+                  academics: [
+                    {
+                      id: 26,
+                      name: "Hasan Çıldır",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Tarım ve Hayvancılık",
+                      room: "1001-A",
+                      floor: 10,
+                      phone: "+902125551001",
+                      email: "h.cildir@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Organik Tarım",
+                      officeHours: "Pazartesi-Çarşamba 10:00-12:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "gole-myo",
+              name: "Nihat Delibalta Göle MYO",
+              icon: "bi-mountain",
+              color: "mountain",
+              type: "vocational",
+              departments: [
+                {
+                  id: "local-administration",
+                  name: "Yerel Yönetimler",
+                  academics: [
+                    {
+                      id: 27,
+                      name: "Nihat Göle",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Yerel Yönetimler",
+                      room: "1002-A",
+                      floor: 10,
+                      phone: "+902125551002",
+                      email: "n.gole@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Kırsal Kalkınma",
+                      officeHours: "Salı-Perşembe 13:00-15:00",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              id: "posof-myo",
+              name: "Posof MYO",
+              icon: "bi-tree-fill",
+              color: "forest",
+              type: "vocational",
+              departments: [
+                {
+                  id: "forestry",
+                  name: "Ormancılık",
+                  academics: [
+                    {
+                      id: 28,
+                      name: "Orhan Posof",
+                      title: "Öğr. Gör.",
+                      role: "MYO Müdürü",
+                      department: "Ormancılık",
+                      room: "1003-A",
+                      floor: 10,
+                      phone: "+902125551003",
+                      email: "o.posof@uni.edu.tr",
+                      image: "https://via.placeholder.com/60x60/cccccc/666666?text=Foto",
+                      specialization: "Orman Koruma",
+                      officeHours: "Çarşamba-Cuma 09:00-11:00",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }
+
+        // Floor Plans Data (Extended)
+        const floorPlans = {
+          1: {
+            name: "1. Kat",
+            rooms: [
+              { id: "101-A", name: "Prof. Dr. Ahmet Yılmaz", x: 20, y: 30, width: 80, height: 40 },
+              { id: "102-B", name: "Doç. Dr. Burcu Aksoy", x: 120, y: 30, width: 80, height: 40 },
+              { id: "103-C", name: "Dr. Öğr. Üyesi Mehmet Kaya", x: 220, y: 30, width: 80, height: 40 },
+              { id: "104-A", name: "Dr. Cem Demir", x: 20, y: 100, width: 80, height: 40 },
+              { id: "105-B", name: "Prof. Dr. Elif Özkan", x: 120, y: 100, width: 80, height: 40 },
+              { id: "106-C", name: "Doç. Dr. Okan Şahin", x: 220, y: 100, width: 80, height: 40 },
+            ],
+          },
+          2: {
+            name: "2. Kat",
+            rooms: [
+              { id: "204-A", name: "Prof. Dr. Kemal Arslan", x: 20, y: 30, width: 80, height: 40 },
+              { id: "205-B", name: "Doç. Dr. Selin Yıldız", x: 120, y: 30, width: 80, height: 40 },
+              { id: "206-C", name: "Dr. Öğr. Üyesi Emre Güven", x: 220, y: 30, width: 80, height: 40 },
+            ],
+          },
+          3: {
+            name: "3. Kat",
+            rooms: [
+              { id: "301-A", name: "Prof. Dr. Hasan Öztürk", x: 20, y: 30, width: 80, height: 40 },
+              { id: "302-B", name: "Doç. Dr. Fatma Erdoğan", x: 120, y: 30, width: 80, height: 40 },
+              { id: "303-C", name: "Dr. Öğr. Üyesi Ali Kılıç", x: 220, y: 30, width: 80, height: 40 },
+            ],
+          },
+          4: {
+            name: "4. Kat",
+            rooms: [
+              { id: "401-A", name: "Prof. Dr. Mustafa Özdemir", x: 20, y: 30, width: 80, height: 40 },
+              { id: "402-B", name: "Doç. Dr. Ayşe Kara", x: 120, y: 30, width: 80, height: 40 },
+            ],
+          },
+          5: {
+            name: "5. Kat",
+            rooms: [
+              { id: "501-A", name: "Prof. Dr. Zeynep Yılmaz", x: 20, y: 30, width: 80, height: 40 },
+              { id: "502-B", name: "Doç. Dr. Murat Koç", x: 120, y: 30, width: 80, height: 40 },
+            ],
+          },
+        }
+
+        // Global Variables
+        let allAcademics = []
+        let filteredAcademics = []
+        let currentUser = null
+        let visitedProfessors = []
+        let selectedAcademic = null
+        let currentFloor = 1
+        let highlightedRoom = null
+
+        // Initialize Application
+        $(document).ready(() => {
+          // Show loading screen
+          setTimeout(() => {
+            $("#loadingScreen").addClass("fade-out")
+            setTimeout(() => {
+              $("#loadingScreen").remove()
+            }, 500)
+          }, 1500)
+
+          // Initialize data
+          initializeData()
+          loadUserData()
+          setupEventListeners()
+          renderFaculties()
+          updateStats()
+
+          // Configure Toastr
+          toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-right",
+            timeOut: "3000",
+          }
+        })
+
+        // Initialize Data
+        function initializeData() {
+          allAcademics = []
+          
+          // Collect academics from all units
+          facultyData.faculties.forEach((faculty) => {
+            faculty.departments.forEach((department) => {
+              allAcademics = allAcademics.concat(department.academics)
+            })
+          })
+          
+          facultyData.institutes.forEach((institute) => {
+            institute.departments.forEach((department) => {
+              allAcademics = allAcademics.concat(department.academics)
+            })
+          })
+          
+          facultyData.schools.forEach((school) => {
+            school.departments.forEach((department) => {
+              allAcademics = allAcademics.concat(department.academics)
+            })
+          })
+          
+          facultyData.vocationalSchools.forEach((vocSchool) => {
+            vocSchool.departments.forEach((department) => {
+              allAcademics = allAcademics.concat(department.academics)
+            })
+          })
+          
+          filteredAcademics = [...allAcademics]
+        }
+
+        // Load User Data from localStorage
+        function loadUserData() {
+          const savedUser = localStorage.getItem("currentUser")
+          const savedVisited = localStorage.getItem("visitedProfessors")
+          const savedDarkMode = localStorage.getItem("darkMode")
+
+          if (savedUser) {
+            currentUser = savedUser
+            updateUserInterface()
+          }
+
+          if (savedVisited) {
+            visitedProfessors = JSON.parse(savedVisited)
+            updateVisitedSection()
+          }
+
+          if (savedDarkMode === "true") {
+            toggleDarkMode()
+          }
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+          // Search functionality
+          $("#searchInput").on("input", debounce(handleSearch, 300))
+
+          // Filter functionality
+          $("#unitTypeFilter").on("change", handleFilter)
+          $("#facultyFilter").on("change", handleFilter)
+          $("#sortBy").on("change", handleSort)
+
+          // Dark mode toggle
+          $("#darkModeToggle").on("click", toggleDarkMode)
+
+          // User login/logout
+          $("#loginBtn").on("click", () => $("#loginModal").modal("show"))
+          $("#loginSubmitBtn").on("click", handleLogin)
+          $("#logoutBtn").on("click", handleLogout)
+
+          // Floor map
+          $("#floorMapBtn").on("click", () => {
+            showFloorMap(1)
+            $("#floorMapModal").modal("show")
+          })
+
+          // Statistics
+          $("#statisticsBtn").on("click", () => {
+            showStatistics()
+            $("#statisticsModal").modal("show")
+          })
+
+          // Floor selection
+          $(document).on("click", "[data-floor]", function () {
+            const floor = parseInt($(this).data("floor"))
+            showFloorMap(floor)
+            $("[data-floor]").removeClass("active")
+            $(this).addClass("active")
+          })
+
+          // Message sending
+          $("#sendMessageBtn").on("click", handleSendMessage)
+
+          // Form submissions
+          $("#loginForm").on("submit", (e) => {
+            e.preventDefault()
+            handleLogin()
+          })
+
+          $("#messageForm").on("submit", (e) => {
+            e.preventDefault()
+            handleSendMessage()
+          })
+        }
+
+        // Debounce function for search
+        function debounce(func, wait) {
+          let timeout
+          return function executedFunction(...args) {
+            const later = () => {
+              clearTimeout(timeout)
+              func(...args)
+            }
+            clearTimeout(timeout)
+            timeout = setTimeout(later, wait)
+          }
+        }
+
+        // Handle Search
+        function handleSearch() {
+          const searchTerm = $("#searchInput").val().toLowerCase()
+          filterAcademics(searchTerm)
+        }
+
+        // Handle Filter
+        function handleFilter() {
+          const searchTerm = $("#searchInput").val().toLowerCase()
+          filterAcademics(searchTerm)
+        }
+
+        // Handle Sort
+        function handleSort() {
+          const searchTerm = $("#searchInput").val().toLowerCase()
+          filterAcademics(searchTerm)
+        }
+
+        // Filter Academics
+        function filterAcademics(searchTerm = "") {
+          const unitTypeFilter = $("#unitTypeFilter").val()
+          const facultyFilter = $("#facultyFilter").val()
+          const sortBy = $("#sortBy").val()
+
+          // Filter by search term and unit type
+          filteredAcademics = allAcademics.filter((academic) => {
+            const matchesSearch =
+              !searchTerm ||
+              academic.name.toLowerCase().includes(searchTerm) ||
+              academic.department.toLowerCase().includes(searchTerm) ||
+              academic.title.toLowerCase().includes(searchTerm) ||
+              academic.specialization.toLowerCase().includes(searchTerm)
+
+            // Check unit type filter
+            let matchesUnitType = true
+            if (unitTypeFilter) {
+              const allUnits = [
+                ...facultyData.faculties,
+                ...facultyData.institutes,
+                ...facultyData.schools,
+                ...facultyData.vocationalSchools
+              ]
+              
+              const academicUnit = allUnits.find(unit => 
+                unit.departments.some(d => d.academics.some(a => a.id === academic.id))
+              )
+              
+              matchesUnitType = academicUnit && academicUnit.type === unitTypeFilter
+            }
+
+            // Check specific unit filter
+            let matchesUnit = true
+            if (facultyFilter) {
+              const allUnits = [
+                ...facultyData.faculties,
+                ...facultyData.institutes,
+                ...facultyData.schools,
+                ...facultyData.vocationalSchools
+              ]
+              
+              const academicUnit = allUnits.find(unit => 
+                unit.departments.some(d => d.academics.some(a => a.id === academic.id))
+              )
+              
+              matchesUnit = academicUnit && academicUnit.id === facultyFilter
+            }
+
+            return matchesSearch && matchesUnitType && matchesUnit
+          })
+
+          // Sort results
+          filteredAcademics.sort((a, b) => {
+            switch (sortBy) {
+              case "name":
+                return a.name.localeCompare(b.name, "tr")
+              case "title":
+                return a.title.localeCompare(b.title, "tr")
+              case "department":
+                return a.department.localeCompare(b.department, "tr")
+              default:
+                return 0
+            }
+          })
+
+          renderFaculties()
+          updateResultsInfo()
+        }
+
+        // Update Results Info
+        function updateResultsInfo() {
+          const count = filteredAcademics.length
+          const searchTerm = $("#searchInput").val()
+          let text = `${count} akademisyen bulundu`
+          if (searchTerm) {
+            text += ` "${searchTerm}" için`
+          }
+          $("#resultsInfo").text(text)
+        }
+
+        // Render Faculties
+        function renderFaculties() {
+          const accordion = $("#facultyAccordion")
+          accordion.empty()
+
+          // Group filtered academics by their units
+          const unitsByAcademics = {}
+
+          filteredAcademics.forEach((academic) => {
+            const allUnits = [
+              ...facultyData.faculties,
+              ...facultyData.institutes,
+              ...facultyData.schools,
+              ...facultyData.vocationalSchools
+            ]
+            
+            const unit = allUnits.find((u) =>
+              u.departments.some((d) => d.academics.some((a) => a.id === academic.id)),
+            )
+
+            if (unit) {
+              if (!unitsByAcademics[unit.id]) {
+                unitsByAcademics[unit.id] = {
+                  ...unit,
+                  academics: [],
+                }
+              }
+              unitsByAcademics[unit.id].academics.push(academic)
+            }
+          })
+
+          // Render each unit
+          Object.values(unitsByAcademics).forEach((unit, index) => {
+            const unitHtml = createUnitHtml(unit, index)
+            accordion.append(unitHtml)
+          })
+
+          // Add animation classes
+          setTimeout(() => {
+            $(".faculty-card").addClass("fade-in")
+          }, 100)
+        }
+
+        // Create Unit HTML
+        function createUnitHtml(unit, index) {
+          const collapseId = `collapse${unit.id}`
+          const academicsHtml = unit.academics.map((academic) => createAcademicHtml(academic)).join("")
+
+          return `
+                <div class="accordion-item faculty-card">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed modern-accordion-btn" type="button" 
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                                aria-expanded="false" aria-controls="${collapseId}">
+                            <div class="faculty-icon ${unit.color}">
+                                <i class="${unit.icon}"></i>
+                            </div>
+                            <div class="faculty-info">
+                                <span class="faculty-name">${unit.name}</span>
+                                <small class="faculty-count">${unit.academics.length} Akademisyen • ${getUnitTypeLabel(unit.type)}</small>
+                            </div>
+                            <div class="expand-indicator">
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                        </button>
+                    </h2>
+                    <div id="${collapseId}" class="accordion-collapse collapse" data-bs-parent="#facultyAccordion">
+                        <div class="accordion-body p-0">
+                            <!-- Desktop Table View -->
+                            <div class="table-responsive desktop-view">
+                                <table class="table modern-table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Akademisyen</th>
+                                            <th>Unvan</th>
+                                            <th>Bölüm</th>
+                                            <th>Oda</th>
+                                            <th>İletişim</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${academicsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Mobile Cards View -->
+                            <div class="mobile-cards mobile-view">
+                                ${unit.academics.map((academic) => createMobileCardHtml(academic)).join("")}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+
+        // Get Unit Type Label
+        function getUnitTypeLabel(type) {
+          switch(type) {
+            case 'faculty': return 'Fakülte'
+            case 'institute': return 'Enstitü'
+            case 'school': return 'Yüksekokul'
+            case 'vocational': return 'Meslek Yüksekokulu'
+            default: return 'Birim'
+          }
+        }
+
+        // Create Academic HTML (Desktop)
+        function createAcademicHtml(academic) {
+          const titleBadgeClass = getTitleBadgeClass(academic.title)
+          const isVisited = visitedProfessors.includes(academic.id)
+
+          return `
+                <tr class="academic-row">
+                    <td>
+                        <div class="academic-profile">
+                            <img src="${academic.image}" alt="${academic.name}" class="profile-img">
+                            <div class="profile-info">
+                                <h6 class="profile-name">${academic.name}</h6>
+                                <small class="profile-role">${academic.role}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge modern-badge ${titleBadgeClass}">${academic.title}</span></td>
+                    <td><span class="department-text">${academic.department}</span></td>
+                    <td>
+                        <span class="room-badge" onclick="showRoomOnMap('${academic.room}', ${academic.floor})" 
+                              title="Kat planında göster">
+                            ${academic.room}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="contact-links">
+                            <a href="tel:${academic.phone}" class="contact-link" title="${academic.phone}">
+                                <i class="bi bi-telephone"></i>
+                            </a>
+                            <a href="mailto:${academic.email}" class="contact-link" title="${academic.email}">
+                                <i class="bi bi-envelope"></i>
+                            </a>
+                            <button class="contact-link" onclick="openMessageModal(${academic.id})" title="Mesaj gönder">
+                                <i class="bi bi-chat-dots"></i>
+                            </button>
+                            ${
+                              currentUser
+                                ? `
+                                <button class="contact-link ${isVisited ? "text-danger" : ""}" 
+                                        onclick="toggleVisited(${academic.id})" 
+                                        title="${isVisited ? "Ziyaret listesinden çıkar" : "Ziyaret listesine ekle"}">
+                                    <i class="bi bi-heart${isVisited ? "-fill" : ""}"></i>
+                                </button>
+                            `
+                                : ""
+                            }
+                        </div>
+                    </td>
+                </tr>
+            `
+        }
+
+        // Create Mobile Card HTML
+        function createMobileCardHtml(academic) {
+          const titleBadgeClass = getTitleBadgeClass(academic.title)
+          const isVisited = visitedProfessors.includes(academic.id)
+
+          return `
+                <div class="mobile-academic-card slide-in">
+                    <div class="mobile-card-header">
+                        <img src="${academic.image}" alt="${academic.name}" class="mobile-profile-img">
+                        <div class="mobile-profile-info">
+                            <h6 class="mobile-name">${academic.name}</h6>
+                            <span class="badge modern-badge ${titleBadgeClass} mb-2">${academic.title}</span>
+                            <p class="mobile-role">${academic.role}</p>
+                        </div>
+                    </div>
+                    <div class="mobile-card-body">
+                        <div class="mobile-info-grid">
+                            <div class="info-item">
+                                <i class="bi bi-building"></i>
+                                <span>${academic.department}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-door-open"></i>
+                                <span onclick="showRoomOnMap('${academic.room}', ${academic.floor})" 
+                                      style="cursor: pointer; text-decoration: underline;" 
+                                      title="Kat planında göster">
+                                    ${academic.room}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-clock"></i>
+                                <span>${academic.officeHours}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-award"></i>
+                                <span>${academic.specialization}</span>
+                            </div>
+                        </div>
+                        <div class="mobile-contact-actions">
+                            <a href="tel:${academic.phone}" class="contact-btn phone">
+                                <i class="bi bi-telephone"></i>
+                                <span>Ara</span>
+                            </a>
+                            <a href="mailto:${academic.email}" class="contact-btn email">
+                                <i class="bi bi-envelope"></i>
+                                <span>Mail</span>
+                            </a>
+                            <button class="contact-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;" 
+                                    onclick="openMessageModal(${academic.id})">
+                                <i class="bi bi-chat-dots"></i>
+                                <span>Mesaj</span>
+                            </button>
+                            ${
+                              currentUser
+                                ? `
+                                <button class="contact-btn ${isVisited ? "bg-danger" : "bg-secondary"}" 
+                                        style="color: white; border: none;" 
+                                        onclick="toggleVisited(${academic.id})">
+                                    <i class="bi bi-heart${isVisited ? "-fill" : ""}"></i>
+                                    <span>${isVisited ? "Çıkar" : "Ekle"}</span>
+                                </button>
+                            `
+                                : ""
+                            }
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+
+        // Get Title Badge Class
+        function getTitleBadgeClass(title) {
+          if (title.includes("Prof.")) return "primary"
+          if (title.includes("Doç.")) return "success"
+          if (title.includes("Dr.")) return "info"
+          if (title.includes("Öğr. Gör.")) return "warning"
+          return "secondary"
+        }
+
+        // Update Stats
+        function updateStats() {
+          const facultyCount = facultyData.faculties.length
+          const departmentCount = 
+            facultyData.faculties.reduce((acc, f) => acc + f.departments.length, 0) +
+            facultyData.institutes.reduce((acc, i) => acc + i.departments.length, 0) +
+            facultyData.schools.reduce((acc, s) => acc + s.departments.length, 0) +
+            facultyData.vocationalSchools.reduce((acc, v) => acc + v.departments.length, 0)
+          const academicCount = allAcademics.length
+          const instituteCount = facultyData.institutes.length
+          const schoolCount = facultyData.schools.length + facultyData.vocationalSchools.length
+
+          // Animate counters
+          animateCounter("#facultyCount", facultyCount)
+          animateCounter("#departmentCount", departmentCount)
+          animateCounter("#academicCount", academicCount)
+          animateCounter("#instituteCount", instituteCount)
+          animateCounter("#schoolCount", schoolCount)
+
+          // Populate unit filters
+          populateUnitFilters()
+        }
+
+        // Populate Unit Filters
+        function populateUnitFilters() {
+          const facultyFilter = $("#facultyFilter")
+          facultyFilter.empty().append('<option value="">Tüm Birimler</option>')
+          
+          // Add faculties
+          facultyData.faculties.forEach((faculty) => {
+            facultyFilter.append(`<option value="${faculty.id}">${faculty.name}</option>`)
+          })
+          
+          // Add institutes
+          facultyData.institutes.forEach((institute) => {
+            facultyFilter.append(`<option value="${institute.id}">${institute.name}</option>`)
+          })
+          
+          // Add schools
+          facultyData.schools.forEach((school) => {
+            facultyFilter.append(`<option value="${school.id}">${school.name}</option>`)
+          })
+          
+          // Add vocational schools
+          facultyData.vocationalSchools.forEach((vocSchool) => {
+            facultyFilter.append(`<option value="${vocSchool.id}">${vocSchool.name}</option>`)
+          })
+        }
+
+        // Show Statistics
+        function showStatistics() {
+          // Unit Statistics
+          const unitStats = $("#unitStats")
+          unitStats.html(`
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Fakülteler</span>
+                <strong>${facultyData.faculties.length}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-primary" style="width: ${(facultyData.faculties.length / 15) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Enstitüler</span>
+                <strong>${facultyData.institutes.length}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: ${(facultyData.institutes.length / 15) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Yüksekokullar</span>
+                <strong>${facultyData.schools.length}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-info" style="width: ${(facultyData.schools.length / 15) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Meslek Yüksekokulları</span>
+                <strong>${facultyData.vocationalSchools.length}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-warning" style="width: ${(facultyData.vocationalSchools.length / 15) * 100}%"></div>
+              </div>
+            </div>
+          `)
+
+          // Academic Statistics by Unit Type
+          const academicsByType = {
+            faculty: 0,
+            institute: 0,
+            school: 0,
+            vocational: 0
+          }
+
+          allAcademics.forEach(academic => {
+            const allUnits = [
+              ...facultyData.faculties,
+              ...facultyData.institutes,
+              ...facultyData.schools,
+              ...facultyData.vocationalSchools
+            ]
+            
+            const unit = allUnits.find(u => 
+              u.departments.some(d => d.academics.some(a => a.id === academic.id))
+            )
+            
+            if (unit) {
+              academicsByType[unit.type]++
+            }
+          })
+
+          const academicStats = $("#academicStats")
+          academicStats.html(`
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Fakülte Akademisyenleri</span>
+                <strong>${academicsByType.faculty}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-primary" style="width: ${(academicsByType.faculty / allAcademics.length) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Enstitü Akademisyenleri</span>
+                <strong>${academicsByType.institute}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-success" style="width: ${(academicsByType.institute / allAcademics.length) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>Yüksekokul Akademisyenleri</span>
+                <strong>${academicsByType.school}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-info" style="width: ${(academicsByType.school / allAcademics.length) * 100}%"></div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <span>MYO Akademisyenleri</span>
+                <strong>${academicsByType.vocational}</strong>
+              </div>
+              <div class="progress mb-2" style="height: 8px;">
+                <div class="progress-bar bg-warning" style="width: ${(academicsByType.vocational / allAcademics.length) * 100}%"></div>
+              </div>
+            </div>
+          `)
+
+          // Title Statistics
+          const titleStats = {}
+          allAcademics.forEach(academic => {
+            const title = academic.title
+            titleStats[title] = (titleStats[title] || 0) + 1
+          })
+
+          const titleStatsHtml = Object.entries(titleStats)
+            .sort((a, b) => b[1] - a[1])
+            .map(([title, count]) => `
+              <div class="mb-3">
+                <div class="d-flex justify-content-between">
+                  <span>${title}</span>
+                  <strong>${count}</strong>
+                </div>
+                <div class="progress mb-2" style="height: 8px;">
+                  <div class="progress-bar ${getTitleProgressColor(title)}" style="width: ${(count / allAcademics.length) * 100}%"></div>
+                </div>
+              </div>
+            `).join('')
+
+          $("#titleStats").html(titleStatsHtml)
+        }
+
+        // Get Title Progress Color
+        function getTitleProgressColor(title) {
+          if (title.includes("Prof.")) return "bg-primary"
+          if (title.includes("Doç.")) return "bg-success"
+          if (title.includes("Dr.")) return "bg-info"
+          if (title.includes("Öğr. Gör.")) return "bg-warning"
+          return "bg-secondary"
+        }
+
+        // Animate Counter
+        function animateCounter(selector, target) {
+          const element = $(selector)
+          let current = 0
+          const increment = target / 50
+          const timer = setInterval(() => {
+            current += increment
+            if (current >= target) {
+              current = target
+              clearInterval(timer)
+            }
+            element.text(Math.floor(current))
+          }, 30)
+        }
+
+        // Toggle Dark Mode
+        function toggleDarkMode() {
+          $("body").toggleClass("dark-mode")
+          const isDark = $("body").hasClass("dark-mode")
+
+          // Update icon
+          const icon = $("#darkModeToggle i")
+          if (isDark) {
+            icon.removeClass("bi-moon-fill").addClass("bi-sun-fill")
+          } else {
+            icon.removeClass("bi-sun-fill").addClass("bi-moon-fill")
+          }
+
+          // Save to localStorage
+          localStorage.setItem("darkMode", isDark)
+
+          toastr.info(`${isDark ? "Karanlık" : "Aydınlık"} mod aktif`)
+        }
+
+        // Handle Login
+        function handleLogin() {
+          const username = $("#usernameInput").val().trim()
+          const password = $("#passwordInput").val().trim()
+
+          if (!username || !password) {
+            Swal.fire({
+              icon: "error",
+              title: "Hata",
+              text: "Lütfen tüm alanları doldurun!",
+            })
+            return
+          }
+
+          currentUser = username
+          localStorage.setItem("currentUser", username)
+          updateUserInterface()
+          $("#loginModal").modal("hide")
+
+          Swal.fire({
+            icon: "success",
+            title: "Giriş Başarılı",
+            text: `Hoş geldiniz, ${username}!`,
+            timer: 2000,
+            showConfirmButton: false,
+          })
+
+          // Clear form
+          $("#loginForm")[0].reset()
+        }
+
+        // Handle Logout
+        function handleLogout() {
+          currentUser = null
+          localStorage.removeItem("currentUser")
+          updateUserInterface()
+
+          toastr.success("Başarıyla çıkış yaptınız")
+        }
+
+        // Update User Interface
+        function updateUserInterface() {
+          if (currentUser) {
+            $("#loginBtn").addClass("d-none")
+            $("#userInfo").removeClass("d-none")
+            $("#userName").text(currentUser)
+            updateVisitedSection()
+            renderFaculties() // Re-render to show heart buttons
+          } else {
+            $("#loginBtn").removeClass("d-none")
+            $("#userInfo").addClass("d-none")
+            $("#visitedSection").addClass("d-none")
+            renderFaculties() // Re-render to hide heart buttons
+          }
+        }
+
+        // Toggle Visited
+        function toggleVisited(academicId) {
+          const academic = allAcademics.find((a) => a.id === academicId)
+          if (!academic) return
+
+          const index = visitedProfessors.indexOf(academicId)
+          if (index > -1) {
+            visitedProfessors.splice(index, 1)
+            toastr.info(`${academic.name} ziyaret listenizden çıkarıldı`)
+          } else {
+            visitedProfessors.push(academicId)
+            toastr.success(`${academic.name} ziyaret listenize eklendi`)
+          }
+
+          localStorage.setItem("visitedProfessors", JSON.stringify(visitedProfessors))
+          updateVisitedSection()
+          renderFaculties() // Re-render to update heart icons
+        }
+
+        // Update Visited Section
+        function updateVisitedSection() {
+          if (!currentUser || visitedProfessors.length === 0) {
+            $("#visitedSection").addClass("d-none")
+            return
+          }
+
+          $("#visitedSection").removeClass("d-none")
+          const visitedList = $("#visitedList")
+          visitedList.empty()
+
+          visitedProfessors.forEach((id) => {
+            const academic = allAcademics.find((a) => a.id === id)
+            if (academic) {
+              visitedList.append(`
+                        <span class="badge bg-primary me-2 mb-2" style="font-size: 0.9rem;">
+                            ${academic.name}
+                            <button class="btn-close btn-close-white ms-2" style="font-size: 0.7rem;" 
+                                    onclick="toggleVisited(${id})"></button>
+                        </span>
+                    `)
+            }
+          })
+        }
+
+        // Open Message Modal
+        function openMessageModal(academicId) {
+          selectedAcademic = allAcademics.find((a) => a.id === academicId)
+          if (!selectedAcademic) return
+
+          $("#recipientName").text(selectedAcademic.name)
+          $("#messageModal").modal("show")
+        }
+
+        // Handle Send Message
+        function handleSendMessage() {
+          const senderName = $("#senderName").val().trim()
+          const senderEmail = $("#senderEmail").val().trim()
+          const subject = $("#messageSubject").val().trim()
+          const content = $("#messageContent").val().trim()
+
+          if (!senderName || !senderEmail || !subject || !content) {
+            Swal.fire({
+              icon: "error",
+              title: "Hata",
+              text: "Lütfen tüm alanları doldurun!",
+            })
+            return
+          }
+
+          // Email validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+          if (!emailRegex.test(senderEmail)) {
+            Swal.fire({
+              icon: "error",
+              title: "Hata",
+              text: "Geçerli bir e-posta adresi girin!",
+            })
+            return
+          }
+
+          // Save message to localStorage
+          const messages = JSON.parse(localStorage.getItem("messages") || "[]")
+          const newMessage = {
+            id: Date.now(),
+            to: selectedAcademic.email,
+            toName: selectedAcademic.name,
+            from: senderEmail,
+            fromName: senderName,
+            subject: subject,
+            content: content,
+            timestamp: new Date().toISOString(),
+          }
+
+          messages.push(newMessage)
+          localStorage.setItem("messages", JSON.stringify(messages))
+
+          $("#messageModal").modal("hide")
+          $("#messageForm")[0].reset()
+
+          Swal.fire({
+            icon: "success",
+            title: "Mesaj Gönderildi",
+            text: `${selectedAcademic.name} adlı akademisyene mesajınız iletildi.`,
+            timer: 3000,
+            showConfirmButton: false,
+          })
+        }
+
+        // Show Room on Map
+        function showRoomOnMap(roomId, floor) {
+          currentFloor = floor
+          highlightedRoom = roomId
+          showFloorMap(floor)
+          $("#floorMapModal").modal("show")
+
+          // Update active floor button
+          $("[data-floor]").removeClass("active")
+          $(`[data-floor="${floor}"]`).addClass("active")
+        }
+
+        // Show Floor Map
+        function showFloorMap(floor) {
+          currentFloor = floor
+          const plan = floorPlans[floor]
+          if (!plan) return
+
+          const floorPlan = $("#floorPlan")
+          floorPlan.html(`
+                <svg width="100%" height="300" viewBox="0 0 400 200" class="border rounded">
+                    <!-- Floor background -->
+                    <rect width="400" height="200" fill="white" stroke="#e5e7eb" stroke-width="2"/>
+                    
+                    <!-- Corridor -->
+                    <rect x="0" y="80" width="400" height="40" fill="#f3f4f6" stroke="#d1d5db"/>
+                    <text x="200" y="105" text-anchor="middle" class="text-xs" fill="#6b7280">Koridor</text>
+                    
+                    <!-- Rooms -->
+                    ${plan.rooms
+                      .map(
+                        (room) => `
+                        <g>
+                            <rect x="${room.x}" y="${room.y}" width="${room.width}" height="${room.height}"
+                                  fill="${highlightedRoom === room.id ? "#3b82f6" : "#e5e7eb"}"
+                                  stroke="${highlightedRoom === room.id ? "#1d4ed8" : "#9ca3af"}"
+                                  stroke-width="2"
+                                  class="room-rect"
+                                  data-room="${room.id}"
+                                  style="cursor: pointer; transition: all 0.3s ease;"
+                                  onmouseover="this.style.fill='#bfdbfe'"
+                                  onmouseout="this.style.fill='${highlightedRoom === room.id ? "#3b82f6" : "#e5e7eb"}'"
+                                  onclick="selectRoom('${room.id}')"/>
+                            <text x="${room.x + room.width / 2}" y="${room.y + room.height / 2 - 5}" 
+                                  text-anchor="middle" class="text-xs font-medium"
+                                  fill="${highlightedRoom === room.id ? "white" : "#374151"}"
+                                  style="pointer-events: none;">
+                                ${room.id}
+                            </text>
+                            <text x="${room.x + room.width / 2}" y="${room.y + room.height / 2 + 8}" 
+                                  text-anchor="middle" class="text-xs"
+                                  fill="${highlightedRoom === room.id ? "white" : "#6b7280"}"
+                                  style="pointer-events: none;">
+                                ${room.name.split(" ").slice(-2).join(" ")}
+                            </text>
+                        </g>
+                    `,
+                      )
+                      .join("")}
+                </svg>
+            `)
+
+          // Update room info
+          if (highlightedRoom) {
+            const room = plan.rooms.find((r) => r.id === highlightedRoom)
+            if (room) {
+              $("#roomInfo").removeClass("d-none")
+              $("#roomDetails").html(`
+                        <strong>Oda:</strong> ${room.id}<br>
+                        <strong>Akademisyen:</strong> ${room.name}
+                    `)
+            }
+          } else {
+            $("#roomInfo").addClass("d-none")
+          }
+        }
+
+        // Select Room
+        function selectRoom(roomId) {
+          highlightedRoom = highlightedRoom === roomId ? null : roomId
+          showFloorMap(currentFloor)
+        }
+
+        // Make functions globally accessible
+        window.showRoomOnMap = showRoomOnMap
+        window.openMessageModal = openMessageModal
+        window.toggleVisited = toggleVisited
+        window.selectRoom = selectRoom
+    </script>
+</body>
+</html>
